@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manufacturing Cloud Professional - Quiz</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f2f5;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a237e,#0288d1);color:#fff;padding:16px 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.header h1{font-size:18px;margin-bottom:8px}
+.header-info{display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:8px;flex-wrap:wrap}
+.progress-bar{width:100%;height:6px;background:rgba(255,255,255,.2);border-radius:3px;margin-top:8px}
+.progress-fill{height:100%;background:#4fc3f7;border-radius:3px;transition:width .3s}
+.controls{display:flex;gap:8px;align-items:center}
+.controls label{font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.controls input[type=checkbox]{cursor:pointer}
+.container{max-width:800px;margin:20px auto;padding:0 16px 80px}
+.card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,.08);animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.q-number{font-size:13px;color:#0288d1;font-weight:700;margin-bottom:8px}
+.q-text{font-size:16px;line-height:1.6;margin-bottom:20px;white-space:pre-line;color:#222}
+.q-hint{font-size:12px;color:#888;margin-bottom:12px}
+.option{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;margin-bottom:8px;border:2px solid #e0e0e0;border-radius:8px;cursor:pointer;transition:all .15s;font-size:14px;line-height:1.5}
+.option:hover{border-color:#90caf9;background:#e3f2fd}
+.option.selected{border-color:#1976d2;background:#e3f2fd}
+.option.correct{border-color:#43a047;background:#e8f5e9}
+.option.wrong{border-color:#e53935;background:#ffebee}
+.option.show-correct{border-color:#43a047;background:#e8f5e9}
+.option input{margin-top:3px;cursor:pointer}
+.option-label{flex:1}
+.option-key{font-weight:700;min-width:20px;color:#555}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px 16px;box-shadow:0 -2px 8px rgba(0,0,0,.1);display:flex;justify-content:center;gap:10px;z-index:100}
+.btn{padding:10px 24px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-primary{background:#1976d2;color:#fff}.btn-primary:hover:not(:disabled){background:#1565c0}
+.btn-success{background:#43a047;color:#fff}.btn-success:hover:not(:disabled){background:#388e3c}
+.btn-outline{background:#fff;color:#555;border:2px solid #ddd}.btn-outline:hover:not(:disabled){border-color:#999}
+.score-box{text-align:center;padding:40px 20px}
+.score-box .big{font-size:64px;font-weight:700;color:#1976d2}
+.score-box .pct{font-size:24px;color:#555;margin:8px 0}
+.score-box .detail{font-size:14px;color:#888;margin-bottom:24px}
+.score-box .grade{font-size:20px;font-weight:600;margin:16px 0;padding:8px 24px;border-radius:8px;display:inline-block}
+.grade-pass{background:#e8f5e9;color:#2e7d32}
+.grade-fail{background:#ffebee;color:#c62828}
+.result-item{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #eee;cursor:pointer;font-size:14px}
+.result-item:hover{background:#f5f5f5}
+.result-icon{font-size:18px;min-width:24px;text-align:center}
+.explanation{margin-top:16px;padding:14px;background:#fff8e1;border-left:4px solid #ffa000;border-radius:4px;font-size:13px;line-height:1.6;display:none;color:#555}
+.explanation.show{display:block}
+.keyboard-hint{font-size:11px;color:#aaa;text-align:center;margin-top:12px}
+@media(max-width:600px){.header h1{font-size:15px}.card{padding:20px}.q-text{font-size:15px}.btn{padding:8px 16px;font-size:13px}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>Salesforce Manufacturing Cloud Professional Exam</h1>
+<div class="header-info">
+<span id="qCounter">문제 1 / 159</span>
+<span id="scoreDisplay">✓ 0 / 0</span>
+<div class="controls">
+<label><input type="checkbox" id="shuffleMode" onchange="resetQuiz()">셔플</label>
+<label><input type="checkbox" id="wrongOnly" onchange="filterWrong()">오답노트</label>
+</div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+<div class="container" id="main"></div>
+<div class="nav" id="navBar">
+<button class="btn btn-outline" id="prevBtn" onclick="go(-1)">← 이전</button>
+<button class="btn btn-success" id="checkBtn" onclick="checkAnswer()">정답 확인</button>
+<button class="btn btn-primary" id="nextBtn" onclick="go(1)">다음 →</button>
+</div>
+<script>
+const questions=[
+{id:1,q:"A salesforce Manufacturing cloud user finds that the current sales agreement data is not displaying in tableau CRM for manufacturing. What two possibilities could cause this to happen?",options:{A:"The sales agreement was linked to person accounts",B:"Sales agreements are only displayed in the grid",C:"The sales agreement was not added to the data flow",D:"The sales agreement data flow was not updated"},answer:["C","D"],multi:true},
+{id:2,q:"Universal Containers (UC) currently uses Sales Agreements to track its annual plans with customers but is working with a consultant to set up Advanced Account Forecasting.\nUC stores shipped/invoiced order data in a child-custom object related to the standard Order object.\nUC has two primary requirements:\n1) To see its forecast by Product Code and Product Category\n2) To see actual order data broken out into three metrics: Quantity Ordered but still Open, Quantity Ordered but Shipped, and Quantity Invoiced\nHow should a consultant set up Advanced Account Forecasting to fulfill these requirements?",options:{A:"On the Forecast Fact - Configure two new custom dimension fields (product code and product category) and three new custom metric fields. Modify the OOTB DPE templates to incorporate the new dimensions and aggregate the data.",B:"On the Forecast Fact - Configure three new custom metric fields. Modify the OOTB DPE templates to aggregate just the new metrics; the new dimension will be automatically incorporated from the product.",C:"On the Forecast Fact - Configure two custom dimension fields and two new custom metric fields. Modify the OOTB DPE templates to incorporate the new dimensions; the new metric aggregation will be automatic."},answer:["A"],multi:false},
+{id:3,q:"An account manager needs to analyze the business performance of several business units and wants to create a sales forecast based on customer accounts, products, and business units.\nWhich forecast solution provides the metrics the account manager is looking for?",options:{A:"Account Forecasting",B:"Account Manager Targets",C:"Advanced Account Forecasting"},answer:["C"],multi:false},
+{id:4,q:"Which Manufacturing Intelligence dashboard should a consultant use to identify products that could upsell and cross-sell across all accounts for the next quarter?",options:{A:"Whitespace Analysis",B:"Pricing Insights",C:"Team Targets"},answer:["A"],multi:false},
+{id:5,q:"In Tableau CRM for Manufacturing, which three user types can be selected to receive credit for an order in the Tableau CRM configuration wizard then calculating actuals against account manager targets?",options:{A:"Other User",B:"Opportunity Owner",C:"Custom Lookup Field for a user on Account",D:"Order Owner",E:"Account Owner"},answer:["A","D","E"],multi:true},
+{id:6,q:"What is the maximum number of products a sales agreement can have?",options:{A:"1500",B:"500",C:"100",D:"1000"},answer:["A"],multi:false},
+{id:7,q:"Which two list views are provided by default to filter account manager targets by the assigned user?",options:{A:"Active Targets",B:"Pending Targets",C:"Assigned by Me",D:"Assigned to Me",E:"Assigned by Manager"},answer:["C","D"],multi:true},
+{id:8,q:"Universal Containers (UC) is preparing to roll out its new Manufacturing Cloud. UC has asked a group of end users to conduct preliminary testing. A group of 12 users is conducting testing and must give the go-ahead to deploy all settings to the production environment.\nWhich items are necessary to conduct proper testing?",options:{A:"Process scripts; Sandbox access; Communication guidelines",B:"Sandbox access; Test data; Process scripts",C:"Profile configuration; Process scripts; User permissions"},answer:["B"],multi:false},
+{id:9,q:"An administrator has updated the team member hierarchy type from Forecasts hierarchy to Manager hierarchy on the account manager target.\nWhat will happen to existing targets?",options:{A:"All access to existing targets will be deleted.",B:"Status for all existing targets will become Read-only.",C:"Status for all existing targets will become Draft."},answer:["B"],multi:false},
+{id:10,q:"If an organization would like to apply a rebate program to more than one account, which course of action should be taken?",options:{A:"Create a new rebate program for each account",B:"Add each account to the rebate benefits related list to the rebate program",C:"Add each account to the members related list on the rebate program"},answer:["C"],multi:false},
+{id:11,q:"Which approach reduces the number of manual process steps and leverages automation technology to load the partner's Proof-of-Sale data required as supporting information for rebate claims?",options:{A:"Expose the Proof-of-Sale object to the partner via the partner Experience Cloud site, allow the partner to create a new record and enter the required information.",B:"Enable the partner to upload scanned images of their customer invoices from the partner Experience Cloud and convert the images into text.",C:"Configure an EDI B2B integration to the partner's ERP system using MuleSoft or other middleware to transfer the data."},answer:["C"],multi:false},
+{id:12,q:"Universal container wants to streamline the way they collaborate on sales agreement with their channel partners. Which is the recommended option?",options:{A:"Leverage the manufacturing experience cloud template to set up a secure site for collaboration",B:"Leverage the salesforce site manufacturing cloud template to set up a secure site for collaboration",C:"Leverage my domain to set up a secure site for collaboration",D:"Leverage Heroku for Manufacturing cloud to set up a secure site for collaboration"},answer:["A"],multi:false},
+{id:13,q:"Which three actions are available when using the mass update multiple values of a single metric of a sales agreement terms tab?",options:{A:"Replace with",B:"Decrease by",C:"Update with",D:"Multiple by",E:"Increase by"},answer:["A","B","E"],multi:true},
+{id:14,q:"The service agents at Universal Containers reported that it takes too long to find information related to contacts and accounts, such as Cases, Assets, Warranties, and Claims.\nWhat should the consultant recommend to make the support process easier?",options:{A:"Create a custom Case Lightning record page.",B:"Enable the Service Console app.",C:"Enable the Service Console for Manufacturing app."},answer:["C"],multi:false},
+{id:15,q:"Many of Universal Containers' management teams must travel to different production facilities. They require access to features on their desktop and mobile devices to view and approve sales agreements.\nWhat is an important consideration to keep in mind when preparing and conducting testing?",options:{A:"The Mobile User permission must be assigned to the test users.",B:"Sales Agreement features are not available on mobile devices, but approvals can be done via email.",C:"When testing Manufacturing Cloud for mobile, a Wi-Fi connection is required."},answer:["B"],multi:false},
+{id:16,q:"Where would a consolidated view of all of the terms of a sales agreement, including the duration, products, price, planned quantities, and actual quantities be found?",options:{A:"Rebate Management in Manufacturing Cloud",B:"Sales Agreement in Manufacturing Cloud",C:"Account Based Forecast in Manufacturing Cloud",D:"Account Manager Targets in Manufacturing Cloud",E:"Contracts in Manufacturing Cloud"},answer:["B"],multi:false},
+{id:17,q:"After selecting the manufacturing template in the community creation wizard, which tool can be used to customize the site?",options:{A:"Template Builder",B:"Experience Builder",C:"Site Builder",D:"Partner Builder",E:"Process Builder"},answer:["B"],multi:false},
+{id:18,q:"What is required before the analytics for manufacturing App can be created?",options:{A:"Refresh sales agreements to be analyzed",B:"At least dashboard must exist in each of the manufacturing cloud objects to be analyzed",C:"Refresh forecasts to be analyzed",D:"At least one record must exist in each of the Manufacturing cloud objects to be analyzed"},answer:["D"],multi:false},
+{id:19,q:"A consultant is implementing Manufacturing Cloud. After the consultant concludes the discovery phase, the customer identifies additional must-have features for the platform.\nWhich recommendation should the consultant make regarding these additional features?",options:{A:"Add the feature in the project scope.",B:"Create a change request and arbitrate based on other features.",C:"Remove another feature from the list of requirements to account for the additional workload."},answer:["B"],multi:false},
+{id:20,q:"Which two statements are correct regarding the visibility of invalid team assignments?",options:{A:"Invalid target assignments are shown in the Notifications section of the Assignments tab in the target's record",B:"Invalid target assignments are shown in Invalid Team Assignments section of a target only if you are the owner of that target.",C:"Invalid target assignments are shown in the Invalid Team Assignments section of the Assignments tab in the target's record.",D:"Invalid target assignments are shown in Invalid Team Assignments related list on the Account Manager Target home page.",E:"Invalid target assignments can be seen in the Invalid Target Assignments report."},answer:["B","C"],multi:true},
+{id:21,q:"Which method can be used to calculate Actuals for sales agreements?",options:{A:"Automatically from contracts through orders.",B:"Automatically from direct orders",C:"Automatically from direct contracts",D:"Manually using api upload",E:"Automatically from orders through contracts"},answer:["B"],multi:false},
+{id:22,q:"When loading data into Salesforce Manufacturing Cloud, following a specific order of operations is crucial. Which option represents the correct order?",options:{A:"Load Products, Accounts, and Contacts first, followed by Orders and, finally, Sales Agreements.",B:"Load Accounts, Sales Agreements, and Orders first followed by Contacts and, finally, Products.",C:"Load Accounts, Contacts, and Products first, followed by Sales Agreements and, finally, Orders."},answer:["C"],multi:false},
+{id:23,q:"Before setting up Manufacturing Cloud, Universal Containers must complete certain prerequisites. Which objects must be set up for sales agreements?",options:{A:"Accounts, Contacts, Products, and Price Books",B:"Accounts, Contacts, Products, Opportunities, and Price Books",C:"Accounts, Contacts, Products, Orders, and Price Books"},answer:["A"],multi:false},
+{id:24,q:"Universal Containers is using sales agreements and does not want to bring actual orders data into salesforce. However, they want to use the actual orders data to analyze the effectiveness of their sales agreements.\nWhich actual calculation option must be selected?",options:{A:"Automatically from orders through contracts",B:"Manually Using actual orders API",C:"Automatically from direct orders",D:"Manually using APL upload"},answer:["B"],multi:false},
+{id:25,q:"The Salesforce administrator at a small manufacturer of fasteners for the automobile industry is configuring Manufacturing Cloud. The manufacturer currently manages orders and contracts in an external system (SAP).\nWhich actuals calculation option should the administrator select?",options:{A:"Manually using API upload",B:"Automatically from orders through contracts",C:"Automatically from direct orders"},answer:["A"],multi:false},
+{id:26,q:"A customer is concerned about whether data for accounts, contacts, and products should be managed in Salesforce exclusively.\nWhat should a consultant recommend?",options:{A:"The ERP is the source of truth for accounts, contacts, and products. Salesforce will consume the data as read-only.",B:"Salesforce is the source of truth for accounts, contacts, and products and is exclusively mastered there.",C:"Accounts, contacts, and products are in Salesforce; the lifecycle of these are codependent with other systems like ERP and PLM."},answer:["C"],multi:false},
+{id:27,q:"An administrator has performed the data migration of sales agreements. How should the administrator test the data consistency across the legacy system and Salesforce?",options:{A:"Create custom reports to aggregate the sales agreements' values and compare with the legacy system.",B:"Use Data Loader to generate a .csv file and manually compare it to import files.",C:"Verify the migration file and compare randomly selected lines with the legacy system."},answer:["A"],multi:false},
+{id:28,q:"Universal Containers would like to use Manufacturing Cloud to forecast its spare part demand based on the number of defective part cases logged by customers and part orders requested by distribution partners.\nWhich customization is required for Advanced Account Forecasting?",options:{A:"A custom forecast fact table",B:"A custom forecast fact table and DPE definition",C:"A custom forecast fact table with the DPE definition from the prebuilt asset, Generate Forecast for Product Categories"},answer:["B"],multi:false},
+{id:29,q:"Universal Containers has implemented Manufacturing Cloud Sales Agreements to manage run rate business. The actuals are updated directly from the orders.\nIn which order should the administrator migrate the data from the legacy system?",options:{A:"Accounts, Sales Agreements, Sales Agreements Products, Orders",B:"Accounts, Sales Agreements, Sales Agreements Schedules, Orders",C:"Orders, Accounts, Sale Agreement, Sales Agreement Products"},answer:["A"],multi:false},
+{id:30,q:"Sales Management has decided that Account Managers should be measured on a CSAT target.\nWhich option describes the steps the Admin should take?",options:{A:"Add a picklist value on the Measure Type field with Label = CSAT and add Target Type = Other, on the Account Manager object",B:"Add a picklist value 'CSAT' to the Measure field and add Measure Type = CSAT, on the Target object",C:"Add a picklist value on the Measure field with Label = CSAT and add Measure Type = Other, on the Account Manager Target object",D:"Add a picklist value 'CSAT' to the Type Field and add Target Type = Other, on the Account Target object"},answer:["C"],multi:false},
+{id:31,q:"Which data load sequence should be followed when loading data into Sales agreement?",options:{A:"Sales Agreement",B:"Sales Agreement Product",C:"Sales Agreement Product schedule"},answer:["A","B","C"],multi:true},
+{id:32,q:"Which dashboard in the Advanced Account Forecasting Analytics app should a user access to do a deep-dive and understand forecasts and actuals by custom dimensions?",options:{A:"Account Health",B:"Account Insights",C:"Forecast Analysis"},answer:["C"],multi:false},
+{id:33,q:"A new custom field is created on the Account Product Forecast (APF) Table. Account Managers have already been assigned the standard Manufacturing Account Forecast permission set.\nWhich two actions can be taken to give Account Managers 'Read' access to this new field?",options:{A:"Clone the standard permission set Manufacturing Account Forecast to a new permission set with license type Manufacturing Forecast Psl. Grant Read access to the field. Assign to Account Managers.",B:"Create a new custom permission set of license type 'Salesforce'. Grant Read access to the field. Assign to Account Managers.",C:"Give 'Read' access to the field on the standard Manufacturing Account Forecast permission set.",D:"Clone the standard permission set Account Forecast to a new permission set with license type 'Salesforce'. Grant 'Read' access to the field. Assign to Account Managers."},answer:["A","B"],multi:true},
+{id:34,q:"An Admin is creating an app from the Analytics for manufacturing template in Tableau CRM. Which Rebate Management object supports custom fields for rebate program(s) analysis?",options:{A:"Program Rebate Type Benefit",B:"Program Rebate Type",C:"Rebate Program",D:"Rebate Member Product Aggregate"},answer:["C"],multi:false},
+{id:35,q:"Which object is required to create a Sales agreement?",options:{A:"Account",B:"B)",C:"Contract",D:"Order",E:"Quote"},answer:["A"],multi:false},
+{id:36,q:"Which two methods can be used to recalculate payouts after the payout period is closed?",options:{A:"Recalculate payouts due to changed benefits",B:"Renew payouts with benefit charges",C:"Recalculate payouts with no charge in benefits",D:"Receive payouts with charged benefits",E:"Recalculate account benefit charge"},answer:["A","C"],multi:true},
+{id:37,q:"Which insights does a user get from Order Forecasting for Manufacturing CRMA app?",options:{A:"Forecasted value only for the specified time period",B:"Forecasted value only for the next 3 months",C:"Forecasted value, range of forecasts, and accuracy"},answer:["C"],multi:false},
+{id:38,q:"An admin wants to create new custom metric on the Account product period forecast component.\nWhat needs to be done to make the metric available on the Account forecast component?",options:{A:"Create a custom field on Account Forecast, create a custom field on account product, map both in the account forecast setting page.",B:"Create a custom field on account product period forecast, create a custom field on account product forecast, map both in the account forecast setting page.",C:"Create a custom field on Sales agreement product, Create a custom field on Sales agreement product period, map both in the Sales agreement setting page.",D:"Create a custom field on account forecast adjustment, Create a custom field on account forecast adjustment period, map both in the account forecast setting page."},answer:["B"],multi:false},
+{id:39,q:"The administrator at Bonsai Manufacturing wants to renew several sales agreements. Which status on the sales agreement restricts the administrator from renewing?",options:{A:"Expired",B:"Activated",C:"Approved"},answer:["B"],multi:false},
+{id:40,q:"Universal container wants to enter a sales agreement for Widget A. Which three minimum data elements are required on sales agreement?",options:{A:"Opp, Pricebook, Product",B:"Account, Opp, Contracts",C:"Account, Price book, Product",D:"Account, Product, Orders"},answer:["C"],multi:false},
+{id:41,q:"Which two objects do not support triggers?",options:{A:"Account Forecast Adjustments (AFA)",B:"Account Forecast (AF)",C:"Account Product Period Forecast (APPF)",D:"Account Product Forecast (APF)"},answer:["B","C"],multi:true},
+{id:43,q:"UC's chemicals are shipped in various tank sizes. UC has requested to show the agreed and delivered volume on each schedule and in the actual figures.\nWhat should a Manufacturing Cloud consultant recommend?",options:{A:"Create custom fields to store the volume, create a Metric Mapping, and then add the metric to the Agreement Terms.",B:"Create custom fields for volume and total volume, and a before save flow to calculate the total volume. Add a Metric Mapping to display the metrics.",C:"Create a custom field to store the volume and a formula field to multiply the volume by the quantity. Add the metric to the Agreement Terms."},answer:["A"],multi:false},
+{id:44,q:"An Account Manager at Badger Power wants to renew their current Sales Agreement. When can the Sales Agreement renewal occur?",options:{A:"Only when the new fiscal period starts.",B:"Only when the renewal period ends.",C:"Only when the renewal period starts.",D:"Only when the sales agreement recalculates.",E:"Only when the sales agreement regenerates."},answer:["C"],multi:false},
+{id:45,q:"When an Admin is configuring Account Forecast Calculation Settings, what is the consequence if Sales Agreement List View is NOT selected?",options:{A:"Only approved sales agreements in the Salesforce org will be considered.",B:"All sales agreements within the generation period will be considered.",C:"No sales agreements will be considered.",D:"All active and expired sales agreements will be considered.",E:"Only sales agreements with approved adjustments will be considered."},answer:["B"],multi:false},
+{id:46,q:"Which two licenses are needed to access the Rebate analytics functionality in Tableau CRM for Manufacturing?",options:{A:"Manufacturing Analytics Plus",B:"Einstein Analytics Plus",C:"Analytics Plus",D:"Rebates Management Add on"},answer:["A","D"],multi:true},
+{id:47,q:"An Account Manager edits the account and market growth percentage values and triggers a forecast recalculation.\nWhen will these new values be used in forecasting the future periods?",options:{A:"When the forecast is calculated for the first time.",B:"When a new forecast is generated for the account.",C:"When the Account Manager is the Account owner.",D:"When account and market growth percentages are used in the forecast formula."},answer:["D"],multi:false},
+{id:48,q:"Which three conditions need to be fulfilled so that an order is included in the Actuals calculation process on a Sales Agreement?",options:{A:"The order needs to have Status = Activated.",B:"The date in the Order Date field should be in the past.",C:"The date in the Order Date field should be in the future.",D:"The order needs to have Category = Activated.",E:"The Sales Agreement field needs to be populated on the Order."},answer:["A","B","E"],multi:true},
+{id:49,q:"An administrator has completed the data migration from a client's legacy system to Manufacturing Cloud. The client wants to ensure all Advanced Account Forecast calculations are correct.\nHow should the administrator reassure the client?",options:{A:"Use Data Loader to generate a .csv file and manually compare it to import files.",B:"Launch the calculations of the Advanced Account Forecast and compare the values with the legacy system.",C:"Request the users to verify the Advanced Account Forecast values of their accounts."},answer:["B"],multi:false},
+{id:50,q:"Universal Containers uses Sales Agreements and wants to avoid bringing actual orders data into Manufacturing Cloud. However, UC wants to use the actual orders data for its sales agreements.\nWhich Actuals Calculation mode must be selected?",options:{A:"Manually using Actual Orders API",B:"Manually using API upload",C:"Automatically from orders through contracts"},answer:["A"],multi:false},
+{id:51,q:"How does Salesforce Manufacturing Cloud help businesses monitor and evaluate system performance against their business process flows?",options:{A:"With built-in demand forecasting and inventory tracking features",B:"By providing real-time analytics for manufacturing performance metrics",C:"Through Seamless integration with ERP and Inventory systems"},answer:["B"],multi:false},
+{id:52,q:"Universal Containers is using Account Based Forecasting and expects a 5% increase in the market but has a target growth of 10%.\nWhere should the Account owner add the additional 5%?",options:{A:"Update the Account Forecast to 10%.",B:"Set 5% value in Account Growth.",C:"Update the Market Growth to 10%."},answer:["B"],multi:false},
+{id:53,q:"What is the recommended way to calculate an Account Based Forecast for the next 13 months in the formula builder?",options:{A:"Create a two-part validation rule for periods 1-12 and period 13.",B:"Create separate formulas for periods 1-12 and period 13.",C:"Create a two-part formula for periods 1-12 and period 13.",D:"Create an approval process for periods 1-12 and period 13.",E:"Create 13 separate formulas."},answer:["C"],multi:false},
+{id:54,q:"A consultant wants to evaluate the previous year's sales results to define the current year's sales targets.\nWhich combination of measures creates account manager targets?",options:{A:"Time period, Accounts, and Products",B:"Time period, Forecasts, and Products",C:"Time period, Opportunities, and Products"},answer:["A"],multi:false},
+{id:55,q:"Universal Containers wants to achieve a complete overview of its one-off and run-rate business in one forecast using Account Based Forecasting.\nWhich consideration should the consultant discuss with UC?",options:{A:"Account Based Forecasting does not allow adding Products manually to forecasts.",B:"Account Based Forecasting does not support custom fiscal years.",C:"Account Based Forecasting does not support Opportunities with Revenue Schedules."},answer:["C"],multi:false},
+{id:56,q:"A user wants to export Account Based Forecast data to use in their Demand Planning system using standard Salesforce Reporting with only forecasting quantity data, including sales team adjustments.\nWhich two actions will enable this process?",options:{A:"Create a report using the standard report type of 'Account Forecasts with Product Period Forecast'.",B:"Creating a report using a custom report type.",C:"Adding the 'Adjusted Forecast Quantity' field from the 'Account Product Forecast' object to the report.",D:"Adding the 'Total Adjusted Forecasted Quantity' field from the 'Account Product Forecast' object to the report."},answer:["A","D"],multi:true},
+{id:57,q:"An administrator at Universal Containers has been asked to establish a 180-day renewal period for all sales agreements.\nWhich method should the administrator use?",options:{A:"Configure a validation rule to ensure the renewal period meets specific criteria.",B:"Leverage a flow to automate renewal reminders based on the renewal period.",C:"Utilize the standard Renewal Period field provided in the Sales Agreement object."},answer:["C"],multi:false},
+{id:58,q:"UC has implemented Sales Cloud and Service Cloud in seven countries in EMEA for about 100 users. UC wants to roll out Sales Agreements in a phased manner, country by country.\nHow should a consultant enable this rollout scenario?",options:{A:"Deploy the new functionality and assign the permission set to the designated users.",B:"Deploy the new functionality and make the Sales Agreements tab visible for the designated users.",C:"Deploy the new functionality and assign the Manufacturing licenses to all of the users."},answer:["A"],multi:false},
+{id:59,q:"Which automation must the consultant consider when loading order data associated with sales agreements for actual calculations?",options:{A:"If order quantities are uploaded in bulk at regular intervals using API upload, the application will reflect these updates after the daily scheduled Salesforce jobs.",B:"Orders with the same date as the sales agreement start date will be included in the actual quantity as long as the SA status is Activated and the order status is Activated.",C:"Actuals are calculated through an hourly automated process, and users must wait until the top of the hour to see results."},answer:["C"],multi:false},
+{id:60,q:"Why would an administrator configure Field-Level Security for the Advanced Account Forecast Partner and Advanced Account Forecast Fact objects?",options:{A:"To provide users access to partner and facts records",B:"To provide users with separate levels of visibility to forecast data",C:"To provide users with separate levels of visibility to activity data"},answer:["B"],multi:false},
+{id:61,q:"Which two options are available to integrate Oracle ERP orders data with Manufacturing Cloud?",options:{A:"Use an AppExchange ISV solution",B:"Use API integration with custom logic",C:"Use the ERP integration template",D:"Use ANT Migration"},answer:["A","B"],multi:true},
+{id:62,q:"Universal Containers wants to make run-rate business more predictable within Manufacturing Cloud.\nWhich standard feature serves as a starting point to manage this?",options:{A:"Opportunity or Sales Agreements",B:"Sales Agreements",C:"Opportunity"},answer:["B"],multi:false},
+{id:63,q:"A manufacturing company makes parts for finished goods (like a cell phone) and sells to distributors and contract manufacturers. The company is not the only approved supplier.\nWhich feature of Manufacturing Cloud should the company utilize for future opportunity planning?",options:{A:"Use Sales Agreements with distributors to manage commits on products and align orders by part number.",B:"Use Advanced Forecasting to set the plan by part for each of the phone brands and align orders by part number.",C:"Use Program Based Business to maintain phone brand demand and leverage actuals against different distributors or contract manufacturers."},answer:["C"],multi:false},
+{id:64,q:"Which dashboards are on the Account page by default after the system administrator installs the Analytics app?",options:{A:"Accounts agreement performance; Forecast analytics for all accounts",B:"Accounts agreement performance; Pricing analytics for the selected account",C:"Accounts agreement performance; Forecast analytics for the selected account"},answer:["C"],multi:false},
+{id:65,q:"UC sells its products directly to B2B customers and through resellers. Which consideration should guide a Manufacturing Cloud consultant to recommend Advanced Account Based Forecasting?",options:{A:"UC might want to establish forecasting with its resellers through a Partner Community.",B:"UC is using record types to separate reseller opportunities from B2B opportunities.",C:"UC is using several custom price books to grant discounts to select resellers."},answer:["A"],multi:false},
+{id:66,q:"UC is deploying Manufacturing Cloud for the first time. The deployment is failing and the error indicates the Sales Agreement object does not exist in the target environment.\nWhat should the administrator check first?",options:{A:"Check that the organization wide default for Sales Agreements is set to Private in the production org.",B:"Check that Sales Agreements are enabled in the production org.",C:"Check that the organization-wide default for Sales Agreements is set to Public Read Write in the production org."},answer:["B"],multi:false},
+{id:67,q:"An organization does not have Account Forecasting Model set up. It has agreed to set up Account Forecasting from 1 Jan 2024 for a period of 18 months. The current period is Feb 2024.\nWhich values will need to be set up for the start period?",options:{A:"18",B:"2",C:"18",D:"2",E:"1"},answer:["E"],multi:false},
+{id:68,q:"When list views are selected for account forecasts, which two permissions options may be based on the list view so the Account managers can generate forecasts?",options:{A:"All users can see the list views",B:"Share list view with group of users",C:"Share list view with account owners",D:"All users above hierarchy can see this list views"},answer:["A","B"],multi:true},
+{id:69,q:"Service agents can't see the Service Console for Manufacturing app despite it being enabled.\nWhat is the recommended method to enable the full functionality?",options:{A:"Grant the Service Agents the Service Console for Manufacturing and Industry Service Excellence permission sets",B:"Add the Service Console for Manufacturing component to the Service Console Lightning Page Layout.",C:"Create a custom permission set to give access to the Service Console for Manufacturing app."},answer:["A"],multi:false},
+{id:70,q:"What is required before the Analytics for Manufacturing App can be created?",options:{A:"At least one record must exist in each of the Manufacturing Cloud objects to be analyzed.",B:"Refresh Sales Agreement(s) to be analyzed.",C:"Refresh Forecast(s) to be analyzed.",D:"At least one dashboard must exist in each of the Manufacturing Cloud objects to be analyzed."},answer:["A"],multi:false},
+{id:71,q:"UC is operating in 21 countries across EMEA with eight different currencies. UC indexes prices annually and introduces new products throughout the year.\nWhat is a potential blocker to their current business processes?",options:{A:"There is a limit to the number of mass updates that can be performed on the sales agreements.",B:"Currency exchange rates can only be updated if Advanced Currency Management is enabled.",C:"Pricing Analytics over accounts is not possible; limit to only 52 forecast updates per year."},answer:["B"],multi:false},
+{id:72,q:"During discovery, sales leadership says their run rate business is hard to forecast because customers constantly order more or fewer engine control units than contractually agreed.\nWhich Manufacturing Cloud capability should a consultant recommend?",options:{A:"Leverage a Data Processing Engine (DPE) job to calculate the forecast deviation.",B:"Use a formula field on the Sales Agreement Product Schedule object to calculate the forecast deviation.",C:"Set up the CRM Analytics template app and leverage embedded dashboards for forecast deviation on the Account page."},answer:["C"],multi:false},
+{id:73,q:"Which two permission sets will allow an Admin to set up Tableau CRM for Manufacturing?",options:{A:"Manufacturing Einstein Admin",B:"Tableau CRM Plus Admin",C:"Manufacturing Analytics Admin",D:"Einstein Analytics Plus User",E:"Manage Analytics"},answer:["A","C"],multi:true},
+{id:74,q:"When is an appropriate time to generate the detailed technical design document when implementing Manufacturing Cloud?",options:{A:"After the business requirement document has been generated.",B:"Before engaging the business users to gather requirements.",C:"After an organization goes live with Manufacturing Cloud."},answer:["A"],multi:false},
+{id:75,q:"Service agents have requested the ability to access the latest updates to a sales agreement when navigating from the customer interaction related to the account.\nWhat should a Manufacturing Cloud consultant recommend?",options:{A:"Create a new timeline with the Sales Agreement as the related object and add the timeline to the Account page.",B:"Add the Sales Agreement related list to the Engagement Interaction record page.",C:"Add the Sales Agreement related list to the Account record page in Lightning App Builder."},answer:["C"],multi:false},
+{id:76,q:"Which two statements are correct about sales agreement cloning?",options:{A:"The product details are copied over from the original sales agreement",B:"The new sales agreement is created in draft status",C:"The default start date of the new sales agreement is equal to the start date of the original",D:"The new sales agreement is created in activated status",E:"The agreement term details are copied over from the original sales agreement"},answer:["A","B"],multi:true},
+{id:77,q:"Universal Containers just launched 100 new products to be used in Salesforce Sales Agreements.\nHow should the products be set up to appear in sales agreements?",options:{A:"All active products automatically appear in sales agreements.",B:"All products with active standard price book entries can be added to sales agreements.",C:"Products must be marked as active and added to the standard price book."},answer:["C"],multi:false},
+{id:78,q:"The Claims page in the Warranty Lifecycle Management app is not showing when the warranty for the asset ends.\nWhat should the consultant recommend?",options:{A:"Register the asset by creating the Asset record and Asset Warranty Terms record for the asset.",B:"Register the asset by creating the Asset record and Warranty Term Coverages record for the asset.",C:"Register the asset by creating the Asset record and Product Warranty Terms record for the asset."},answer:["A"],multi:false},
+{id:79,q:"If the team member hierarchy type is changed in account manager targets, which statement is accurate?",options:{A:"No change to existing targets",B:"All the existing targets become read only",C:"All the existing targets turn to draft status",D:"All the existing targets have to be reapproved based on the new hierarchy"},answer:["B"],multi:false},
+{id:80,q:"How does the time series projection feature in Tableau CRM for manufacturing provide data insights?",options:{A:"It tracks product growth trends",B:"It tracks performance against account manager targets",C:"It tracks inventory utilization for a defined time frame",D:"It tracks account revenue growth against goals",E:"It tracks against product margin targets"},answer:["A"],multi:false},
+{id:81,q:"UC has multiple active Sales Agreements for the current quarter. Each contains Product A. Via manual API upload, a new order containing Product A comes in.\nWhich Sales Agreement will this new order be linked to?",options:{A:"The Sales Agreement that was activated last will be linked to the order.",B:"The Sales Agreement that was activated first will be linked to the order.",C:"The Sales Agreement can only be linked manually to the order.",D:"The Sales Agreement that was selected by custom logic will be linked to the order."},answer:["D"],multi:false},
+{id:82,q:"An administrator is concerned about increased data corruption and wants to maintain data integrity in Manufacturing Cloud.\nWhat should the administrator do?",options:{A:"Update the non-System Administrator user profiles, giving them View All and Modify All data permissions on the Sales Agreement object.",B:"Clone the standard Manufacturing Sales Agreements permission set, deselect the mass update for Sales Agreements, and assign the cloned permission set to all non-System Administrator users.",C:"Edit the standard Manufacturing Sales Agreements permission set, deselect the mass update for Sales Agreements, and assign to all non-System Administrator users."},answer:["B"],multi:false},
+{id:83,q:"An administrator would like to configure out of the box dashboards in Manufacturing Cloud:\n- Target Attainment\n- Team Performance\n- Manufacturing Home Page\n- Key Account Manager Home\nWhich role are all of these dashboards fully suited to?",options:{A:"Head of Sales",B:"Security Personnel",C:"Account Manager"},answer:["A"],multi:false},
+{id:84,q:"UC wants to track minimum inventory quantity required on Sales Agreements. A new Minimum Inventory field was added to the Sales Agreement Product Schedule object.\nWhat else does UC need to do?",options:{A:"Add a Number field to the Sales Agreement product to appear on the Forecast grid.",B:"Add a custom Minimum Inventory field to Sales Agreement Product, map the two fields, and add the field to the list of available metrics in Sales Agreement setup.",C:"Add a custom Minimum Inventory field to the Sales Agreement object to appear on the Forecast grid."},answer:["B"],multi:false},
+{id:85,q:"A client has provided a list of unstructured, unprioritized requirements.\nWhat should a consultant do to advance to the next step?",options:{A:"Prepare a template with the requirements and their associated priority, and work with the client to evaluate each item.",B:"Write a Solution Design Document detailing the required technical solution.",C:"Structure the list of requirements and spend time evaluating the impact and added value of each requirement before discussing with the client."},answer:["A"],multi:false},
+{id:86,q:"A consultant is implementing Manufacturing Cloud. After discovery, the customer identifies additional must-have features.\nWhich recommendation should the consultant make?",options:{A:"Create a change request and arbitrate based on other features.",B:"Add the feature in the project scope.",C:"Remove another feature from the list of requirements to account for the additional workload."},answer:["A"],multi:false},
+{id:87,q:"What is a recommended way for UC to establish clarity between new business and run-rate business?",options:{A:"New businesses should use Opportunities and Collaborative Forecasting. Run-rate business should use Sales Agreements and Account Based Forecast.",B:"New businesses should always use Opportunities and Sales Agreements.",C:"Run-rate business should use only Account Based Forecast and Opportunities."},answer:["A"],multi:false},
+{id:88,q:"Universal Containers wants to add a rebate benefit defined by a product dimension.\nWhich related list must be defined to create this dimension?",options:{A:"Payout Mappings",B:"Benefit Mappings",C:"Dimensions Type Mappings",D:"Rebate Type Mappings"},answer:["B"],multi:false},
+{id:89,q:"Warranty claim adjudicators need visibility to all claim-related data on a single page, including warranty coverage and parts/labor costs.\nWhich permission set licenses do they need?",options:{A:"Service Console for Manufacturing and Warranty Lifecycle Management Psl",B:"Industry Service Excellence and Warranty Lifecycle Management Psl",C:"Warranty Lifecycle Management Psl and Claims Management Foundation"},answer:["C"],multi:false},
+{id:90,q:"Which three permission sets are available with Manufacturing Cloud?",options:{A:"Manufacturing Price Book",B:"Manufacturing Account Forecast",C:"Manufacturing Sales Agreements",D:"Manufacturing Sales Orders",E:"Manufacturing Account Manager Target"},answer:["B","C","E"],multi:true},
+{id:91,q:"A consultant has completed an implementation and needs to import order data into Manufacturing Cloud.\nWhich steps must the consultant follow?",options:{A:"Provide the client with a data template file reflecting the data mapping and identify related records. Disable irrelevant automations/rules.",B:"Request an extract of the data from the legacy system and import as-is without transformation. Disable irrelevant automations/rules.",C:"Provide the client with a data template file limited to required fields and identify required related records. Disable irrelevant automations/rules."},answer:["A"],multi:false},
+{id:92,q:"In Tableau CRM for manufacturing, which security predicate should be used with ManagerId?",options:{A:"Role Hierarchy",B:"Manufacturing Cloud Hierarchy",C:"Account Hierarchy",D:"Row level Sharing for territories",E:"Manager Hierarchy"},answer:["E"],multi:false},
+{id:93,q:"Which two options are recommended to collaborate with channel partners in Manufacturing Cloud?",options:{A:"Visualforce pages",B:"Lightning Classic Apps",C:"External Apps",D:"Experience Cloud",E:"Manufacturing Cloud license for external users"},answer:["D","E"],multi:true},
+{id:94,q:"When using the Time Period filter on a sales agreement record page, which options are available?",options:{A:"Range",B:"Set Periods",C:"Custom",D:"Current Period",E:"Fiscal Year"},answer:["A","B","D"],multi:true},
+{id:95,q:"An organization wants to let account managers delete sales agreements they inadvertently created.\nWhat should the organization do?",options:{A:"Give them the Delete Sales Agreements profile",B:"Give them the Delete Sales Agreements permission",C:"Give them the Remove Sales Agreement permission"},answer:["B"],multi:false},
+{id:96,q:"Universal Containers is experiencing an increase in manual errors with its repetitive business processes.\nWhich tool(s) should the consultant recommend to help mitigate errors by leveraging automation?",options:{A:"Flow for Manufacturing",B:"Process Builder and Flow Builder",C:"Workflow Rules and Process Builder"},answer:["A"],multi:false},
+{id:97,q:"The Analytics for Manufacturing app has three modules: Sales Agreements, Account Based Forecasts, and Account Manager Targets.\nWhich installation setup option is available for module selection?",options:{A:"The administrator must select all three modules for the app to be installed.",B:"The administrator cannot change the default selection of modules.",C:"The administrator can choose any combination of modules based on the business need."},answer:["C"],multi:false},
+{id:98,q:"Which three actions are available when using the Mass Update function to update multiple values of a single metric of a Sales Agreement in the Sales Agreement Terms tab?",options:{A:"Decrease By",B:"Update With",C:"Increase By",D:"Replace With",E:"Multiply By"},answer:["A","C","D"],multi:true},
+{id:99,q:"Which Calculation Method can calculate a benefit structure on a total quantity of 150 units, where the first 100 units earn $0 per unit and the next 50 units earn $10 per unit?",options:{A:"Specified",B:"Elapsed",C:"Stepped",D:"Aggregate"},answer:["C"],multi:false},
+{id:100,q:"A consultant implementing Manufacturing Cloud wants to see the actual orders in sales agreements.\nHow should the consultant automate this process?",options:{A:"By selecting one of the options in the Actuals Calculation section on the Sales Agreement Setup page",B:"By importing the quantities using an API on a daily scheduled Job",C:"By manually updating the quantities for every schedule when a sales agreement is active"},answer:["A"],multi:false},
+{id:101,q:"Which method can be used to calculate Actuals for sales agreements?",options:{A:"Automatically from contracts through orders",B:"Manually using api upload",C:"Automatically from orders through contracts",D:"Automatically from direct orders",E:"Automatically from direct contracts"},answer:["D"],multi:false},
+{id:102,q:"Which three options can be defined by an Admin in the Setup area in Account Manager Targets?",options:{A:"Price Book",B:"Target Measure Type",C:"Team Member Hierarchy",D:"Distribution Frequency",E:"Default Currency"},answer:["A","C","D"],multi:true},
+{id:103,q:"Manufacturing Cloud supports which two types of Experience Clouds?",options:{A:"Customer",B:"Partner",C:"External Apps (+)",D:"Internal",E:"Employee"},answer:["A","B"],multi:true},
+{id:104,q:"A consultant has been assigned to comprehensively analyze how an organization utilizes Manufacturing Cloud.\nWhy is it important to understand the landscape of the business before going into the details of requirements?",options:{A:"To ensure there's an understanding of the big picture and understand where the real opportunity lies between teams agnostic of Manufacturing Cloud",B:"To support the various business process capabilities across teams that support the customer and the needed areas for integration",C:"To help broaden the scope of the project and initiative so that everything transforms at once"},answer:["A"],multi:false},
+{id:105,q:"What is a fundamental reason why a System Integration Testing (SIT) environment is required as part of a Manufacturing Cloud release management process?",options:{A:"SIT provides an environment for users to conduct UAT to identify any functional gaps prior to deployment to production.",B:"Deployment of Manufacturing Cloud often includes integration with account and order data. Testing the functionality of those integrations is a precursor prior to deployment to production.",C:"It is important to be able to test the Salesforce functionality with production data and without data masking."},answer:["B"],multi:false},
+{id:106,q:"Which two Manufacturing cloud functionalities are available in the standard Manufacturing Experience Cloud Template?",options:{A:"Rebate Management",B:"Sales Agreements",C:"Account Based Forecasts",D:"Account Manager Targets"},answer:["B","C"],multi:true},
+{id:107,q:"A consultant is with an organization that doesn't currently have Manufacturing Cloud. The organization would like to utilize Sales Agreements for Accounts with Product Level and Actuals Calculation Mode from Direct Orders.\nWhich data items must a consultant consider when creating sales agreements from historical data?",options:{A:"Accounts, Orders, Order Lines, Products",B:"Accounts, Orders, Order Lines, Invoices",C:"Accounts, Orders, Order Lines, Opportunities"},answer:["A"],multi:false},
+{id:108,q:"Which dashboard allows a user to analyze revenue realization, length of relationship, and customer lifetime value across accounts?",options:{A:"Customers Health",B:"Sales Agreement Insights",C:"White Space Analysis",D:"Account Insights",E:"Accounts Health"},answer:["D"],multi:false},
+{id:109,q:"UC is using Sales Agreements and does not want to bring actual orders data into Salesforce but wants to analyze effectiveness of their sales agreements.\nWhich Actuals Calculation option must be selected?",options:{A:"Automatically from direct orders",B:"Automatically from orders through contracts",C:"Manually using Actual Orders API",D:"Manually using API upload"},answer:["C"],multi:false},
+{id:110,q:"UC has been in manufacturing for many years. The industry has become much more volatile.\nWhich specific business challenge does the implementation of Manufacturing Cloud tackle?",options:{A:"Gaining visibility in businesses to improve forecast accuracy and collaborate with stakeholders",B:"Connecting stakeholders and assets for real-time collaboration in the field",C:"Connecting to potential buyers and predicting the likelihood of a sale"},answer:["A"],multi:false},
+{id:111,q:"Which two key performance indicators can be calculated on the Forecast Analysis dashboard in Tableau CRM for Manufacturing?",options:{A:"Average Price",B:"Days Remaining",C:"Mean absolute percentage error in the forecast",D:"Actual vs Forecasted Revenue",E:"Actual vs Planned Revenue"},answer:["C","D"],multi:true},
+{id:112,q:"Partner managers from UC are performing onsite visits to distribution partners to renew sales agreements. Leadership wants to measure effectiveness and standardize tasks.\nWhich features should a Manufacturing Cloud consultant recommend?",options:{A:"Partner Visit Management, Advanced Account Forecasting, and CRM Analytics for Manufacturing",B:"Partner Visit Management, Action Plans, and Generic Visit Key Performance Indicators",C:"Partner Visit Management, Experience Cloud, and Service Console for Manufacturing"},answer:["B"],multi:false},
+{id:113,q:"UC wants to enrich the warranty claims experience for partners and distributors from the Manufacturing Experience Cloud site.\nWhich standard object captures Type, Reason, and Account information?",options:{A:"Claim Participant",B:"Claim",C:"Claim Item"},answer:["B"],multi:false},
+{id:114,q:"Which two statements are accurate when embedding the Manufacturing agreement Performance and Manufacturing Product Performance dashboards in a lightning page?",options:{A:"Must set Component height to 120",B:"No filter required.",C:"Can embed in sales agreement page layout only",D:"Can embed in any manufacturing cloud page layout"},answer:["A","D"],multi:true},
+{id:115,q:"What is the main function of out-of-the-box Data Processing Engine jobs in Rebate Management?",options:{A:"Delete, add, clone and transform journal transactions.",B:"Query, extract, filter and aggregate journal transactions",C:"It includes custom metrics in the transaction journal",D:"It applies the benefit structure and creates payouts"},answer:["B"],multi:false},
+{id:116,q:"UC is implementing Advanced Account Forecasting for its national business. UC has three primary product materials it wants to forecast for each key distribution partner, but doesn't need product detail in its forecast.\nWhat should the administrator do?",options:{A:"Add custom Material dimension to Forecast Fact and Forecast Set. Update the DPE definitions to aggregate at the distribution partner level.",B:"Configure a custom Forecast Context. Create new DPE definitions from scratch.",C:"Add custom Material dimension to Forecast Fact and Forecast Set. Clone and use the standard DPE definitions to populate the new custom metrics."},answer:["C"],multi:false},
+{id:117,q:"Which three permission sets are available with Manufacturing Cloud?",options:{A:"Manufacturing Sales Agreements",B:"Manufacturing Account Forecast",C:"Manufacturing Sales Orders",D:"Manufacturing Price Book",E:"Manufacturing Account Manager Target"},answer:["A","B","E"],multi:true},
+{id:118,q:"Which two statements are true if an org hits the account product period forecast record limit?",options:{A:"New Products cannot be added to account forecasts",B:"New products are not added when recalculating a single account forecast or recalculating all account forecasts",C:"New products added to account forecasts will not be included in recalculations",D:"The add products option will no longer appear on the agreement terms tab"},answer:["A","B"],multi:true},
+{id:119,q:"An organization would like to show its account managers specific data points for Sales Agreements terms based on business needs.\nWhat is the first step?",options:{A:"Enabling custom metrics",B:"Allowing account reps to add agreement terms",C:"Enabling metric groups"},answer:["C"],multi:false},
+{id:120,q:"A manufacturing cloud user is adding products to an order on an active sales agreement.\nWhich status must the order be in to make the addition?",options:{A:"Approved",B:"Pending",C:"Active",D:"Draft"},answer:["D"],multi:false},
+{id:121,q:"Which two out-of-the-box actions can be performed on a Sales Agreement?",options:{A:"Recalculate Actuals",B:"Update Products (Mass Update)",C:"Update Adjustments",D:"Regenerate Agreement"},answer:["A","D"],multi:true},
+{id:122,q:"UC has created flows for its Manufacturing Cloud processes. All actions within its flows are currently custom-built.\nWhat are some of the default automation actions that Manufacturing Cloud provides?",options:{A:"Recalculate Forecasts Actions, Update Account Manager Target Values, Send Forecast Summary Actions",B:"Calculate Advanced Account Forecasts, Recalculate Forecasts Actions, Recalculate Account Manager Targets",C:"Update Account Manager Target Values, Refresh Actuals Calculations, Calculate Advanced Account Forecasts"},answer:["C"],multi:false},
+{id:123,q:"Badger Power is using Manufacturing Cloud. The forecast formula was recently adjusted to reflect Opportunity Probability.\nWhich action will this trigger?",options:{A:"Recalculation of all active forecast(s).",B:"Recalculation of all forecast(s).",C:"Regeneration of all forecast(s).",D:"Regeneration of all active forecast(s)."},answer:["B"],multi:false},
+{id:124,q:"UC wants to implement forecasting for its stock parts division (rolling monthly) and engineered-to-order parts division (rolling quarterly), both with revenue and quantity metrics.\nWhat should a Manufacturing Cloud consultant recommend?",options:{A:"Configure Advanced Account Forecasting with two forecast sets, two period groups, and two forecast metrics.",B:"Configure Advanced Account Forecasting with one forecast set, two period groups, and four forecast metrics.",C:"Configure Advanced Account Forecasting with one forecast set, two period groups, and two forecast metrics."},answer:["C"],multi:false},
+{id:125,q:"In Salesforce Manufacturing Cloud, why is it important to validate the functionality against business process flows during implementation or system updates?",options:{A:"To ensure that the system accurately supports and aligns with the specific manufacturing processes of the organization",B:"To optimize and streamline the manufacturing operations by leveraging the full capabilities of Salesforce Manufacturing Cloud",C:"To improve user adoption and satisfaction by customizing the system to match the organization's unique business requirements"},answer:["A"],multi:false},
+{id:126,q:"What is the purpose of a detailed technical design document when implementing Manufacturing Cloud?",options:{A:"Identifies the statement of work and cost to implement the application based on business requirements.",B:"Provides personas and user stories with high-level objectives of what users want to accomplish with the application.",C:"Defines specific details as to how the functionalities will be configured"},answer:["C"],multi:false},
+{id:127,q:"What out-of-the-box Manufacturing Cloud function can be used to notify users if automated processes fail?",options:{A:"Automated Processes Status report",B:"Automated Processes Notifications",C:"Email Notifications",D:"Manufacturing Cloud Home Page Notifications related"},answer:["C"],multi:false},
+{id:128,q:"The admin at badger power is trying to setup a Rebate type that is valid for transactions completed in January.\nWhich option reflects by the admin?",options:{A:"Setup a new rebate program with that volume rebate type and a single payout period for Jan",B:"Set Rebate type to active on Jan1 and inactive on Jan31",C:"Use the effective date on Rebate Type",D:"Set up an eligibility criteria for this rebate type with activity Date >= Jan1 and <= Jan31"},answer:["D"],multi:false},
+{id:129,q:"Universal Containers has a large number of stock keeping units (SKUs), which hinders the executive team from making decisions quickly.\nWhich function helps the team?",options:{A:"Account Based Forecasting",B:"Product Categories",C:"Sales Agreements"},answer:["B"],multi:false},
+{id:130,q:"Universal Containers uses an ERP system for order and inventory management. UC would like to give its sales teams the ability to view the order information related to an account without replicating the order information.\nWhich object type should a consultant use?",options:{A:"A standard Order object",B:"An external object",C:"A custom object"},answer:["B"],multi:false},
+{id:131,q:"A Salesforce consultant built an integration that calls an external endpoint via an Apex callout. However, the callout is failing with: \"System.CalloutException: Unauthorized endpoint\".\nWhat should the consultant do to fix this error?",options:{A:"Create a connected app for the external system.",B:"Register the URL in Remote Site Settings.",C:"Ensure that the integration user has the necessary permissions to perform the callout."},answer:["B"],multi:false},
+{id:132,q:"Universal Containers field reps want to have a more accurate picture of their distributor's business. The field rep will compare and update expected versus actual order values during the next visit.\nWhich Manufacturing Cloud object should the consultant configure?",options:{A:"Advanced Account Forecast",B:"Generic Visit Key Performance Indicator",C:"Account Relationship"},answer:["B"],multi:false},
+{id:133,q:"The Financial Team at Budger Power wants to be sure to pay out Rebates on Invoices that has Status Paid within Rebate Management.\nHow can an Admin ensure that this requirement is fulfilled?",options:{A:"Validate invoice status in ERP before bringing into Salesforce.",B:"Additional steps are not needed. Only transactions with Status = Paid are included in the Journal.",C:"Create a custom field in Transaction Journal, copy Invoice Status data into custom field, then use as an eligibility condition in Rebate Types",D:"Update Data Processing Engine job to filter out transactions where Invoice status does not Paid"},answer:["C"],multi:false},
+{id:134,q:"Which statement is accurate about Account Manager Targets?",options:{A:"Account Manager Targets are only supported for custom fiscal year.",B:"Account Manager Targets are supported for standard fiscal year and custom fiscal year.",C:"Account Manager Targets can only be used after a forecast calendar is configured.",D:"Account Manager Targets are only supported for standard fiscal year and not for custom fiscal year."},answer:["D"],multi:false},
+{id:135,q:"What is the purpose of defining the renewal days for sales agreement?",options:{A:"Determines the beginning of the sales agreement",B:"Determines the beginning of the renewal period",C:"Determines the end of the sales agreement",D:"Determines the end of the sales agreement"},answer:["B"],multi:false},
+{id:136,q:"Which three actions on the Forecast settings page will trigger the regeneration of all the eligible accounts that satisfy the forecast generation criteria?",options:{A:"Update the forecast start period",B:"Update the forecast adjustment period",C:"Update the forecast formula",D:"Update the forecast frequency",E:"Update the forecast display duration"},answer:["A","D","E"],multi:true},
+{id:137,q:"What would prohibit an administrator from creating and sharing the Advanced Account Forecasting Analytics for Manufacturing app?",options:{A:"Sales Agreements is not enabled.",B:"Orders are not enabled.",C:"Account Forecasting is not enabled."},answer:["C"],multi:false},
+{id:138,q:"An organization is looking to support channel partners but has yet to onboard them digitally. The organization would like to work closely with its partners to plan their work and support them.\nWhat should the organization do to fill this gap?",options:{A:"Add a timeline to the Experience Cloud",B:"Leveraging Partner Visit Management functionality",C:"Allow them to submit claims against warranty coverage"},answer:["B"],multi:false},
+{id:139,q:"Customer service reps would like to set up end-to-end service processes to manage the entire service operation lifecycle.\nWhich tool should the consultant use?",options:{A:"Service Automation Studio",B:"Service Process Studio.",C:"Manufacturing Cloud Studio"},answer:["B"],multi:false},
+{id:140,q:"What is the maximum number of sales Agreement that can be activated for the same period, containing the same Products and linked to the same Account?",options:{A:"1",B:"50",C:"No defined limit",D:"10000",E:"128"},answer:["A"],multi:false},
+{id:141,q:"What is a key first step for Manufacturing Cloud implementation?",options:{A:"Configure forecast regeneration settings.",B:"Enable Manufacturing Cloud features in Setup.",C:"Enable Manufacturing Cloud permissions for users."},answer:["B"],multi:false},
+{id:142,q:"When a target is changed in Account Manager Targets, which action must be taken to reflect this change to Account Manager assignment values?",options:{A:"No action required, changes are reflected automatically",B:"Update to Assignments",C:"Refresh Assignments",D:"Recalculate Assignments",E:"Propagate to Assignments"},answer:["E"],multi:false},
+{id:143,q:"What is the proper utilization of a System Integration Testing (SIT) environment?",options:{A:"Used as a backup and archive of production configuration and data",B:"Used as a development environment to configure and build new applications",C:"Used as an environment to perform system-to-system testing"},answer:["C"],multi:false},
+{id:144,q:"At universal containers some Manufacturing cloud users have 'Delete sales agreement' profile permission.\nWhich two statements are correct about that permission and the ability to delete sales agreements?",options:{A:"Account owners will see the 'Delete' option on the sales agreements record header",B:"Only sales agreements with no associated products can be deleted",C:"Only these user will see the 'Delete' option on the sales agreement record header",D:"Only non-active sales agreements can be deleted",E:"Sales agreements with any status can be deleted"},answer:["C","E"],multi:true},
+{id:145,q:"Which two out-of-the-box Manufacturing Actions can be performed in Process Builder and Flow Builder?",options:{A:"Clone Sales Agreement",B:"Mass Archive Sales Agreement",C:"Mass Update Account Forecast",D:"Clone Account Forecast",E:"Mass Update Sales Agreement"},answer:["A","E"],multi:true},
+{id:146,q:"Universal Containers (UC) is interested in using Manufacturing Cloud. During discovery, the business analyst identifies the following requirements:\n1. UC needs the ability to set quantity and revenue targets at the manager level, and the manager needs the ability to distribute that across each member of their team and their team's accounts.\n2. UC needs the ability to visualize the targets compared to the actual order amounts for the accounts with targets.\n3. UC needs the ability to forecast its sales on a rolling 12-month basis using a combination of data from opportunities, long-term agreements, past orders, and market data that is uploaded periodically.\nWhich combination of Manufacturing Cloud features addresses the requirements above?",options:{A:"Account Manager Targets, Sales Agreements, Advanced Account Forecasting",B:"Account Manager Targets, Advanced Account Forecasting, CRM Analytics for Manufacturing App",C:"Account Manager Targets, Account Based Forecasting, CRM Analytics for Manufacturing App"},answer:["B"],multi:false},
+{id:147,q:"The warranty administrators on the global warranty team at Universal Containers (UC) want to specify the parts and labor codes covered under warranty for UC's products.\nWhich object should help the administrators achieve this?",options:{A:"Warranty Term Coverages related list under Warranty Terms.",B:"Warranty Terms.",C:"Product Warranty Terms related list under Warranty Terms"},answer:["A"],multi:false},
+{id:148,q:"Which two options can be used to populate a custom metric so that it shows on forecast grid?",options:{A:"Implement a record trigger flow on Account Product Forecast (APF)",B:"Implement an apex trigger on Account Product Forecast (APF)",C:"Used to recalculate all forecast button on the account forecast settings page",D:"Implement an apex trigger on Account Product period Forecast (APPF)",E:"Implement an record trigger on Account Product period Forecast (APPF)"},answer:["D","E"],multi:true},
+{id:149,q:"A custom metric for display on Agreement Terms is needed based on business requirements. Custom fields and mappings are required between the Sales Agreement Product and Sales Agreement Product Schedule objects.\nWhat should an administrator consider while designing for this requirement?",options:{A:"Only number, percent, and currency field types are available for mapping.",B:"Only number, formula, and value field types are available for mapping.",C:"Only number, currency, and formula field types are available for mapping."},answer:["A"],multi:false},
+{id:150,q:"A salesforce Manufacturing cloud admin wants to change the forecast frequency from quarterly to monthly in the account settings.\nWhich two things do they need to be aware of?",options:{A:"The administrator grants them to right make changes to the forecast settings in the adjustments.",B:"A full regeneration of all the eligible account forecasts will be carried out.",C:"A recalculation of the forecast for the accounts added since the least update will be carried out",D:"The length of the time that has elapsed since the last change to the forecast setting.",E:"All the previously active account forecasts will expire"},answer:["B","E"],multi:true},
+{id:151,q:"A Salesforce consultant has been tasked with creating an integration user to facilitate order data from an ERP system into Sales Agreements. The integration will require the ability to write to a custom object.\nHow should the consultant extend access to grant the necessary permissions for the integration user?",options:{A:"Use a Salesforce administrator account as an integration user and the necessary access will already be granted.",B:"Create permission sets and permission set groups to extend access and grant necessary permissions, then assign it to an integration user.",C:"Extend access and grant necessary permissions through the integration user profile."},answer:["B"],multi:false},
+{id:152,q:"When discussing the business requirements for a Manufacturing Cloud implementation design, what is a consideration when analyzing data in existing third-party systems?",options:{A:"Define current processes required by the business.",B:"Identify the capabilities of different data integration tools.",C:"Determine the system of record for each data category required by the business."},answer:["C"],multi:false},
+{id:153,q:"Universal Containers has implemented Rebate Management and wants to define the Benefit information section of a Rebate Type Benefit.\nWhich Sequence of Minimum and Maximum Range values would be valid?",options:{A:"0 to 100, 101 to 200, 201 to 300, 301 to 400",B:"0 to 100, 100 to 200, 200 to 300, 300 to 400",C:"Less than 100, Less than 200, Less than 300, Less than 400",D:"Greater than 100, Less than 200, Less than 300, Less than 400"},answer:["A"],multi:false},
+{id:154,q:"A regional sales manager for Universal Containers would like to forecast at the product hierarchy level.\nHow should the system administrator set up Advanced Account Forecasting?",options:{A:"Configure the forecast set on the Advanced Account Forecasting Setup page.",B:"Configure the forecast context field from Account Id to Product Category.",C:"Create a flow to modify the Advanced Account Forecasting to support the product hierarchy."},answer:["A"],multi:false},
+{id:155,q:"Universal Containers just went live with Manufacturing Cloud. The administrator has been tasked with uploading sales agreement data into the system.\nIn which order does the administrator need to approach this task?",options:{A:"Insert Sales Agreements, Insert Sales Agreement Products, Insert Sales Agreement Product Schedule",B:"Insert Sales Agreements, Insert Sales Agreement Products, Update Sales Agreement Schedule",C:"Update Sales Agreements, Update Sales Agreement Products, Update Sales Agreement Product Schedule"},answer:["A"],multi:false},
+{id:157,q:"Badger Power wants to have a complete picture of both their run-rate and net-new business.\nWhich two Manufacturing Cloud functions should be configured?",options:{A:"Account Based Forecasting",B:"Opportunity Funnel",C:"Sales Agreements",D:"Collaborative Forecast",E:"Product Forecast"},answer:["A","C"],multi:true},
+{id:158,q:"Universal Containers (UC) is looking to improve visibility into its long-term agreements and forecasts. A business analyst has gathered UC's requirements:\n1. UC tracks its long-term agreements by planned quantity and planned revenue at the product category level.\n2. UC has a custom fiscal year and tracks its forecast weekly.\n3. UC needs to see the ordered quantity, revenue, shipped quantity, and revenue in its forecast metrics.\n4. The primary dimension in UC's forecasts is the product category.\nWhat should be customized in Manufacturing Cloud?",options:{A:"Sales Agreement Metrics",B:"Advanced Account Forecast Fact object",C:"Data Processing Engine (DPE) Templates"},answer:["B"],multi:false},
+{id:159,q:"What are some key considerations in ensuring an efficient and successful global rollout of Manufacturing Cloud?",options:{A:"Manufacturers may have one or many versions of core systems like an Enterprise Resource Planning (ERP) that will require integrations and design considerations that vary.",B:"Rollouts must be phased rather than done simultaneously because Manufacturing Cloud has regional and data volume limitations.",C:"There are language requirements, legal variation by geography, and cultural differences."},answer:["A","C"],multi:true}
+];
+
+let currentIdx=0,score=0,attempted=0,checked=false,userAnswers={},checkedSet=new Set(),wrongSet=new Set(),order=[],optOrder={};
+const $=id=>document.getElementById(id);
+
+function init(){
+  order=questions.map((_,i)=>i);
+  loadProgress();
+  if($('shuffleMode').checked)shuffle(order);
+  render();
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+
+function filterWrong(){
+  if($('wrongOnly').checked){
+    order=[...wrongSet];
+    if(order.length===0){alert('오답이 없습니다!');$('wrongOnly').checked=false;return}
+  }else{
+    order=questions.map((_,i)=>i);
+    if($('shuffleMode').checked)shuffle(order);
+  }
+  currentIdx=0;checked=false;render();
+}
+
+function resetQuiz(){
+  if($('shuffleMode').checked){order=questions.map((_,i)=>i);shuffle(order)}
+  else{order=questions.map((_,i)=>i)}
+  currentIdx=0;score=0;attempted=0;checked=false;userAnswers={};checkedSet.clear();wrongSet.clear();optOrder={};
+  localStorage.removeItem('mfg_quiz');render();
+}
+
+function render(){
+  if(currentIdx>=order.length){showResults();return}
+  const qi=order[currentIdx],q=questions[qi];
+  checked=checkedSet.has(qi);
+  $('qCounter').textContent=`문제 ${currentIdx+1} / ${order.length}`;
+  $('scoreDisplay').textContent=`✓ ${score} / ${attempted}`;
+  $('progressFill').style.width=((currentIdx+1)/order.length*100)+'%';
+
+  let h=`<div class="card"><div class="q-number">Q${q.id}</div>`;
+  h+=`<div class="q-text">${esc(q.q)}</div>`;
+  if(q.multi)h+=`<div class="q-hint">${q.answer.length}개를 선택하세요</div>`;
+
+  const ua=userAnswers[qi];
+  if(!optOrder[qi]){const k=Object.keys(q.options);shuffle(k);optOrder[qi]=k}
+  const keys=optOrder[qi];
+  keys.forEach((k,i)=>{
+    let cls='option';
+    const isSel=ua&&ua.includes(k);
+    const isCorr=q.answer.includes(k);
+    if(checked){
+      if(isSel&&isCorr)cls+=' correct';
+      else if(isSel&&!isCorr)cls+=' wrong';
+      else if(!isSel&&isCorr)cls+=' show-correct';
+    }else if(isSel)cls+=' selected';
+
+    const type=q.multi?'checkbox':'radio';
+    const chk=(isSel)?'checked':'';
+    const dis=checked?'disabled':'';
+    h+=`<div class="${cls}" onclick="toggleOpt(${qi},'${k}',${q.multi})" id="opt_${qi}_${k}">`;
+    h+=`<input type="${type}" name="q${qi}" ${chk} ${dis} tabindex="-1">`;
+    h+=`<span class="option-key">${k}.</span>`;
+    h+=`<span class="option-label">${esc(q.options[k])}</span></div>`;
+  });
+
+  h+=`</div>`;
+  h+=`<div class="keyboard-hint">키보드: 1~${keys.length} 선택 | Enter 정답확인 | ← → 이동</div>`;
+  $('main').innerHTML=h;
+
+  $('checkBtn').disabled=checked;
+  $('prevBtn').disabled=currentIdx===0;
+  $('nextBtn').textContent=currentIdx>=order.length-1?'결과 보기 →':'다음 →';
+  $('navBar').style.display='flex';
+}
+
+function toggleOpt(qi,key,multi){
+  if(checked)return;
+  if(!userAnswers[qi])userAnswers[qi]=[];
+  const ua=userAnswers[qi];
+  if(multi){
+    const idx=ua.indexOf(key);
+    if(idx>-1)ua.splice(idx,1);else ua.push(key);
+  }else{
+    userAnswers[qi]=[key];
+  }
+  render();
+}
+
+function checkAnswer(){
+  const qi=order[currentIdx],q=questions[qi];
+  const ua=userAnswers[qi];
+  if(!ua||ua.length===0){alert('답을 선택하세요!');return}
+  checked=true;checkedSet.add(qi);attempted++;
+  const isCorrect=q.answer.length===ua.length&&q.answer.every(a=>ua.includes(a));
+  if(isCorrect)score++;else wrongSet.add(qi);
+  userAnswers[qi]=ua;
+  saveProgress();render();
+}
+
+function go(dir){
+  if(dir===1&&!checked&&!userAnswers[order[currentIdx]]){currentIdx++;render();return}
+  currentIdx+=dir;
+  if(currentIdx<0)currentIdx=0;
+  if(currentIdx>order.length)currentIdx=order.length;
+  render();
+}
+
+function showResults(){
+  const pct=attempted>0?Math.round(score/attempted*100):0;
+  const pass=pct>=65;
+  let h=`<div class="card score-box">`;
+  h+=`<div class="big">${pct}%</div>`;
+  h+=`<div class="pct">${score} / ${attempted} 정답</div>`;
+  h+=`<div class="detail">총 ${order.length}문제 중 ${attempted}문제 풀이</div>`;
+  h+=`<div class="grade ${pass?'grade-pass':'grade-fail'}">${pass?'PASS':'FAIL'} (합격 기준: 65%)</div>`;
+  h+=`<br><button class="btn btn-primary" onclick="resetQuiz()" style="margin:8px">처음부터 다시</button>`;
+  h+=`<button class="btn btn-outline" onclick="reviewWrong()" style="margin:8px">오답 복습 (${wrongSet.size}문제)</button>`;
+  h+=`</div>`;
+
+  if(wrongSet.size>0){
+    h+=`<div class="card" style="margin-top:16px"><h3 style="margin-bottom:12px">오답 목록</h3>`;
+    [...wrongSet].forEach(qi=>{
+      const q=questions[qi];
+      h+=`<div class="result-item" onclick="jumpTo(${qi})">`;
+      h+=`<span class="result-icon" style="color:#e53935">✗</span>`;
+      h+=`<span>Q${q.id}: ${esc(q.q.substring(0,80))}...</span></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  $('main').innerHTML=h;
+  $('navBar').style.display='none';
+  $('qCounter').textContent='결과';
+  $('progressFill').style.width='100%';
+}
+
+function reviewWrong(){
+  if(wrongSet.size===0){alert('오답이 없습니다!');return}
+  order=[...wrongSet];currentIdx=0;
+  score=0;attempted=0;
+  wrongSet.forEach(qi=>{delete userAnswers[qi];checkedSet.delete(qi)});
+  wrongSet.clear();checked=false;
+  $('navBar').style.display='flex';render();
+}
+
+function jumpTo(qi){
+  const idx=order.indexOf(qi);
+  if(idx>-1){currentIdx=idx;checked=!!userAnswers[qi];$('navBar').style.display='flex';render()}
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function saveProgress(){
+  try{localStorage.setItem('mfg_quiz',JSON.stringify({userAnswers,score,attempted,checkedSet:[...checkedSet],wrongSet:[...wrongSet]}))}catch(e){}
+}
+function loadProgress(){
+  try{
+    const d=JSON.parse(localStorage.getItem('mfg_quiz'));
+    if(d){userAnswers=d.userAnswers||{};score=d.score||0;attempted=d.attempted||0;checkedSet=new Set(d.checkedSet||[]);wrongSet=new Set(d.wrongSet||[])}
+  }catch(e){}
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'&&e.target.type==='text')return;
+  const qi=order[currentIdx],q=questions[qi];
+  if(!q)return;
+  const keys=Object.keys(q.options);
+  if(e.key>='1'&&e.key<='9'){
+    const idx=parseInt(e.key)-1;
+    if(idx<keys.length&&!checked)toggleOpt(qi,keys[idx],q.multi);
+  }
+  if(e.key==='Enter'&&!checked)checkAnswer();
+  if(e.key==='ArrowRight')go(1);
+  if(e.key==='ArrowLeft')go(-1);
+});
+
+init();
+</script>
+</body>
+</html>
